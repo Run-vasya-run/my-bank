@@ -3,27 +3,28 @@ import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Text, List, Switch, Button, Avatar, useTheme, Divider, SegmentedButtons } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../src/stores/authStore';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next'; // Импорт
 
 export default function SettingsScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { logout } = useAuthStore();
-  const { i18n } = useTranslation();
+  
+  // ВАЖНО: Достаем t (функцию перевода) и i18n
+  const { t, i18n } = useTranslation();
 
   const [isBiometrics, setIsBiometrics] = useState(false);
-  const [isNotifications, setIsNotifications] = useState(true);
-  const [language, setLanguage] = useState(i18n.language || 'ru');
+  const [language, setLanguage] = useState(i18n.language); // Убрал || 'ru', i18n сам знает текущий язык
 
   const changeLang = (lang: string) => {
     setLanguage(lang);
-    i18n.changeLanguage(lang);
+    i18n.changeLanguage(lang); // Эта команда заставляет React перерисовать экран с новым языком
   };
 
   const handleLogout = () => {
-    Alert.alert("Выход", "Выйти из аккаунта?", [
-      { text: "Отмена", style: "cancel" },
-      { text: "Выйти", style: "destructive", onPress: logout }
+    Alert.alert(t('settings_logout'), t('settings_logout_confirm'), [
+      { text: t('settings_cancel'), style: "cancel" },
+      { text: t('settings_logout'), style: "destructive", onPress: logout }
     ]);
   };
 
@@ -36,14 +37,16 @@ export default function SettingsScreen() {
       </View>
 
       <List.Section>
-        <List.Subheader>Безопасность</List.Subheader>
+        {/* Используем t() для перевода */}
+        <List.Subheader>{t('settings_security')}</List.Subheader>
+        
         <List.Item
-          title="Вход по Face ID"
+          title={t('settings_faceid')}
           left={props => <List.Icon {...props} icon="face-recognition" />}
           right={() => <Switch value={isBiometrics} onValueChange={setIsBiometrics} color={theme.colors.primary} />}
         />
         <List.Item
-          title="Сменить пароль"
+          title={t('settings_password')}
           left={props => <List.Icon {...props} icon="lock-reset" />}
           onPress={() => Alert.alert("Пароль", "Функция смены пароля")}
         />
@@ -52,7 +55,7 @@ export default function SettingsScreen() {
       <Divider />
 
       <List.Section>
-        <List.Subheader>Язык / Tili / Language</List.Subheader>
+        <List.Subheader>{t('settings_lang')}</List.Subheader>
         <View style={{ paddingHorizontal: 20 }}>
             <SegmentedButtons
                 value={language}
@@ -68,7 +71,7 @@ export default function SettingsScreen() {
 
       <View style={{ padding: 20, marginTop: 20 }}>
         <Button mode="outlined" icon="logout" onPress={handleLogout} textColor="red" style={{ borderColor: 'red' }}>
-          Выйти
+          {t('settings_logout')}
         </Button>
       </View>
     </ScrollView>

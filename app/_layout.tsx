@@ -18,6 +18,7 @@ export default function RootLayout() {
         <Stack.Screen name="login" />
         {/* ВАЖНО: Указываем имя твоей папки - tabs */}
         <Stack.Screen name="tabs" />
+        <Stack.Screen name="register" options={{ headerShown: true, title: 'Регистрация' }} /> 
         <Stack.Screen name="qr" options={{ presentation: 'modal' }} />
         <Stack.Screen name="chat" />
         <Stack.Screen name="history" />

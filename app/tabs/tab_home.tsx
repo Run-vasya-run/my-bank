@@ -19,16 +19,37 @@ export default function Home() {
   const [selectedCard, setSelectedCard] = useState<any>(null);
   const [cardModalVisible, setCardModalVisible] = useState(false);
 
+  // Функция для подбора иконки по названию (Связь с Сервисами)
+  const getTransactionIcon = (title: string, category?: string) => {
+    const text = (title + " " + (category || "")).toLowerCase();
+    
+    if (text.includes('taxi') || text.includes('яндекс') || text.includes('uber')) return 'taxi'; // Как в Services
+    if (text.includes('bus') || text.includes('transport') || text.includes('proezd')) return 'bus'; // Как в Services
+    if (text.includes('itu') || text.includes('univer') || text.includes('tuition')) return 'school'; // Как в Services
+    if (text.includes('eco') || text.includes('tree')) return 'tree'; // Как в Services
+    if (text.includes('magnum') || text.includes('market') || text.includes('shop')) return 'cart';
+    if (text.includes('starbucks') || text.includes('coffee')) return 'coffee';
+    
+    return 'credit-card-outline'; // Дефолтная
+  };
+
   const fetchData = async () => {
     try {
       const cardsRes = await bankApi.getCards(); 
       setCards(cardsRes.data);
       const total = cardsRes.data.reduce((acc: number, card: any) => acc + Number(card.balance), 0);
       setTotalBalance(total);
+      
       const historyRes = await bankApi.getHistory();
-      setTransactions(historyRes.data);
+      // Добавляем иконки к реальным данным
+      const enrichedHistory = historyRes.data.map((t: any) => ({
+          ...t,
+          icon: getTransactionIcon(t.title || t.category || "")
+      }));
+      setTransactions(enrichedHistory);
+
     } catch (error) {
-      // ДЕМО ДАННЫЕ
+      // ДЕМО ДАННЫЕ (Показываем красивые иконки)
       setCards([
         { id: 1, type: 'Visa', number: '4000 1234 5678 9010', balance: 150000, currency: 'KZT', is_blocked: false },
         { id: 2, type: 'Mastercard', number: '5100 9876 5432 1098', balance: 450, currency: 'USD', is_blocked: true }
@@ -36,7 +57,9 @@ export default function Home() {
       setTotalBalance(350000);
       setTransactions([
         { id: 101, title: 'Magnum', amount: -12400, date: 'Сегодня', icon: 'cart' },
-        { id: 102, title: 'Starbucks', amount: -1800, date: 'Вчера', icon: 'coffee' }
+        { id: 102, title: 'Yandex Taxi', amount: -2500, date: 'Сегодня', icon: 'taxi' }, // Иконка из сервисов
+        { id: 103, title: 'ITU Campus', amount: -60000, date: 'Вчера', icon: 'school' }, // Иконка из сервисов
+        { id: 104, title: 'Starbucks', amount: -1800, date: 'Вчера', icon: 'coffee' }
       ]);
     } finally {
       setLoading(false);
@@ -66,11 +89,12 @@ export default function Home() {
     }
   };
 
+  // Обновил иконки на более современные и соответствующие сервисам
   const quickActions = [
-    { icon: 'bank-transfer', label: 'Переводы', color: '#6200ee', route: '/tabs/payments' },
-    { icon: 'qrcode-scan', label: 'QR', color: '#03dac6', route: '/qr' },
-    { icon: 'history', label: 'История', color: '#f4511e', route: '/history' },
-    { icon: 'chat', label: 'AI Чат', color: '#e91e63', route: '/chat' },
+    { icon: 'swap-horizontal', label: 'Переводы', color: '#6200ee', route: '/tabs/payments' },
+    { icon: 'qrcode', label: 'QR', color: '#03dac6', route: '/qr' },
+    { icon: 'clock-outline', label: 'История', color: '#f4511e', route: '/history' },
+    { icon: 'robot', label: 'AI Чат', color: '#e91e63', route: '/chat' }, // Теперь ROBOT
   ];
 
   if (loading) return <ActivityIndicator style={{marginTop: 50}} size="large" color={theme.colors.primary} />;
@@ -83,7 +107,6 @@ export default function Home() {
             <Text style={{ color: '#888', fontSize: 14 }}>Добрый день,</Text>
             <Text style={{ color: theme.colors.onBackground, fontSize: 24, fontWeight: 'bold' }}>Нурбек 👋</Text>
             </View>
-            {/* АВАТАРКА ТЕПЕРЬ КНОПКА */}
             <TouchableOpacity onPress={() => router.push('/settings')}>
                 <Avatar.Image size={45} source={{ uri: 'https://i.pravatar.cc/150?img=11' }} />
             </TouchableOpacity>
@@ -132,7 +155,7 @@ export default function Home() {
             <Text style={[styles.sectionTitle, { color: theme.colors.onBackground }]}>Последние операции</Text>
             {transactions.map((t) => (
                 <View key={t.id} style={[styles.transaction, { backgroundColor: theme.colors.elevation.level1 }]}>
-                    <Avatar.Icon size={40} icon={t.icon || 'currency-usd'} style={{ backgroundColor: '#e0e0e0' }} color="#333" />
+                    <Avatar.Icon size={40} icon={t.icon || 'credit-card-outline'} style={{ backgroundColor: theme.colors.elevation.level3 }} color={theme.colors.primary} />
                     <View style={{ flex: 1, marginLeft: 15 }}>
                         <Text style={[styles.tName, { color: theme.colors.onBackground }]}>{t.title || t.category}</Text>
                         <Text style={{ color: '#888', fontSize: 12 }}>{t.date || t.created_at?.slice(0,10)}</Text>

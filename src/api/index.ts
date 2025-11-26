@@ -1,61 +1,76 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
-// ⚠️ ВАЖНО: Сюда вставь ссылку, которую даст друг (например: https://a1b2.ngrok-free.app)
-// Пока друга нет, оставь localhost, но на телефоне это работать не будет без Ngrok
-const BASE_URL = 'http://192.168.0.105:8000'; 
+// ⚠️ ВАЖНО: Эту ссылку нужно менять КАЖДЫЙ РАЗ, когда перезапускаешь ngrok
+// Ссылка должна быть вида https://xxxx.ngrok-free.app (без /api/v1 и т.д., если в Django так не настроено)
+const BASE_URL = 'https://mixolydian-sau-causeless.ngrok-free.dev/'; 
 
 export const api = axios.create({
-  baseURL: BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  baseURL: BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
-// Автоматическая подстановка токена (Bearer)
+// Автоматическая подстановка токена (Bearer) во все запросы
 api.interceptors.request.use(async (config) => {
-  const token = await SecureStore.getItemAsync('user_jwt_secure');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
+  const token = await SecureStore.getItemAsync('user_jwt_secure');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`; // [cite: 140]
+  }
+  return config;
 });
 
 export const bankApi = {
-  // 1. АВТОРИЗАЦИЯ (СТРОГО ПО ТЗ: Form Data)
-  login: async (phone: string, password: string) => {
-    // FastAPI ожидает x-www-form-urlencoded
-    const formData = new URLSearchParams();
-    formData.append('username', phone); 
-    formData.append('password', password);
+  // 1. АВТОРИЗАЦИЯ
+  // Login: отправляем как форму (x-www-form-urlencoded), поле телефона = username [cite: 134, 135]
+  login: async (phone: string, password: string) => {
+    const formData = new URLSearchParams();
+    formData.append('username', phone); 
+    formData.append('password', password);
 
-    return api.post('/auth/login', formData.toString(), {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    });
-  },
+    return api.post('/auth/login', formData.toString(), {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    });
+  },
 
-  register: (data: any) => api.post('/auth/register', data),
-  getMe: () => api.get('/auth/users/me'),
+  // Register: отправляем JSON. Я добавил явные типы, чтобы вы не ошиблись с названиями полей.
+  // Бэкенд ждет именно: phone, password, full_name [cite: 147-150]
+  register: (data: { phone: string; password: string; full_name: string }) => 
+    api.post('/auth/register', data),
 
-  // 2. СЧЕТА И КАРТЫ
-  getCards: () => api.get('/accounts/'),
-  createCard: (currency: string = 'KZT') => api.post('/accounts/create', { currency }),
-  blockCard: (accountId: number) => api.patch(`/accounts/${accountId}/block`),
-  unblockCard: (accountId: number) => api.patch(`/accounts/${accountId}/unblock`),
+  getMe: () => api.get('/auth/users/me'), // [cite: 165]
 
-  // 3. ОПЕРАЦИИ
-  getHistory: () => api.get('/transactions/'),
-  transferP2P: (amount: number, to_phone?: string, to_card?: string) => 
-    api.post('/transfers/p2p', { amount, to_phone, to_card }),
+  // 2. СЧЕТА И КАРТЫ
+  getCards: () => api.get('/accounts/'), // [cite: 179]
+  createCard: (currency: string = 'KZT') => api.post('/accounts/create', { currency }), // [cite: 170]
+  
+  // Блокировка: accountId - это ID счета (1, 2...), а не номер карты на пластике! 
+  blockCard: (accountId: number) => api.patch(`/accounts/${accountId}/block`), // [cite: 51]
+  unblockCard: (accountId: number) => api.patch(`/accounts/${accountId}/unblock`), // [cite: 55]
+
+  // 3. ОПЕРАЦИИ
+  getHistory: () => api.get('/transactions/'), // [cite: 89]
+  
+  // P2P: Можно передать или телефон, или номер карты [cite: 186-191]
+  transferP2P: (amount: number, to_phone?: string, to_card?: string) => 
+    api.post('/transfers/p2p', { amount, to_phone, to_card }),
+  
+  // 4. СЕРВИСЫ
+  payService: (service_name: string, amount: number) => 
+    api.post('/services/pay', { service_name, amount }), // [cite: 86, 204]
+
+  // 5. ИИ ЧАТ (Groq)
+  chatWithAI: (message: string) => api.post('/ai/chat', { message }), // [cite: 35, 251]
+
+  // 6. КРЕДИТЫ (Новая функция для Хакатона)
+  applyLoan: (amount: number, term_months: number, income: number) => 
+    api.post('/loans/apply', { amount, term_months, income }), // [cite: 58, 268]
+
+  // 7. MFA (Двухфакторная аутентификация) <--- НОВЫЕ МЕТОДЫ, КОТОРЫХ НЕ ХВАТАЛО
+  // Посылает запрос на генерацию кода на сервере (POST /mfa/generate)
+  generateMFA: () => api.post('/mfa/generate'), 
   
-  // 4. СЕРВИСЫ
-  payService: (service_name: string, amount: number) => 
-    api.post('/services/pay', { service_name, amount }),
-
-  // 5. ИИ ЧАТ
-  chatWithAI: (message: string) => api.post('/ai/chat', { message }),
-
-  // 6. КРЕДИТЫ
-  applyLoan: (amount: number, term_months: number, income: number) => 
-    api.post('/loans/apply', { amount, term_months, income }),
+  // Посылает код на проверку (POST /mfa/verify)
+  verifyMFA: (code: string) => api.post('/mfa/verify', { code }), 
 };
