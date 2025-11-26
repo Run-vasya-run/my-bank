@@ -58,14 +58,23 @@ export default function Services() {
     { id: 2, name: 'Айжан', avatar: 'face-woman', recent: '3 дня назад' },
   ];
 
+  // === ОБНОВЛЕННЫЙ СПИСОК СЕРВИСОВ С ИКОНКАМИ ===
   const services = [
+    // [Image of Иконка сейфа]
     { id: 9, title: 'Мой Бюджет', icon: 'safe', color: '#3f51b5', badge: 'NEW', desc: 'Сейф расходов', fullDesc: 'Временная стоянка для денег.' },
+    // 
     { id: 5, title: 'ITU Campus', icon: 'school', color: '#6200ee', badge: null, desc: 'Университет', fullDesc: 'Оплата учебы и доступ в универ.' },
+    // 
     { id: 6, title: 'Digital Taraz', icon: 'bus', color: '#03dac6', badge: null, desc: 'Транспорт', fullDesc: 'Билеты и проезд.' },
+    // [Image of Иконка такси]
     { id: 8, title: 'Такси', icon: 'taxi', color: '#ffc107', badge: null, desc: 'Заказ поездки', fullDesc: 'Быстрый заказ такси.' },
+    // 
     { id: 1, title: 'Ortak (Split)', icon: 'account-group', color: '#f4511e', badge: 'HOT', desc: 'Разделить счет', fullDesc: 'Скиньтесь с друзьями.' },
+    // [Image of Иконка дерева]
     { id: 2, title: 'Eco Life', icon: 'tree', color: '#4caf50', badge: 'ESG', desc: 'Посади дерево', fullDesc: 'Внеси вклад в экологию.' },
+    // 
     { id: 7, title: 'Кредит', icon: 'cash-multiple', color: '#ff9800', badge: 'NEW', desc: 'Онлайн за 1 мин', fullDesc: 'Получи деньги на карту мгновенно.' },
+    // 
     { id: 3, title: 'Ghost Card', icon: 'ghost', color: '#607d8b', badge: 'SAFE', desc: 'Безопасность', fullDesc: 'Виртуальная карта.' },
   ];
 
@@ -76,7 +85,6 @@ export default function Services() {
     else if (serviceItem.title === 'Кредит') setLoanModalVisible(true);
     else if (serviceItem.title === 'Мой Бюджет') setBudgetModalVisible(true);
     else if (serviceItem.title === 'Такси') {
-        // Сразу открываем, без вопроса
         Linking.openURL('https://go.yandex.kz');
     }
     else { setSelectedService(serviceItem); setInfoModalVisible(true); }
@@ -93,7 +101,6 @@ export default function Services() {
     const val = Number(env.inputValue);
     if (val <= 0) return;
     
-    // Вместо Alert используем showSnack с флагом ошибки
     if (val > freeBalance) { showSnack("Недостаточно свободных средств", true); return; }
     
     setFreeBalance(prev => prev - val);
@@ -105,7 +112,6 @@ export default function Services() {
     const env = envelopes.find(e => e.id === id);
     if (!env || env.amount <= 0) { showSnack("Ячейка пуста", true); return; }
     
-    // Мгновенное действие без подтверждения (быстрее UI)
     setFreeBalance(prev => prev + env.amount);
     setEnvelopes(prev => prev.map(e => e.id === id ? { ...e, amount: 0 } : e));
     showSnack(`Деньги возвращены на карту`);
@@ -150,7 +156,6 @@ export default function Services() {
       const env = envelopes.find(e => e.id === id);
       if (!env || env.amount <= 0) { showSnack("Нет денег для оплаты", true); return; }
       
-      // Мгновенная оплата
       setEnvelopes(prev => prev.map(e => e.id === id ? { ...e, amount: 0 } : e));
       showSnack(`Оплачено: ${env.amount} ₸`);
   };
@@ -286,7 +291,7 @@ export default function Services() {
                 <View style={{height: 50}} /> 
             </ScrollView>
             
-            {/* Вставляем Snackbar ВНУТРЬ модалки Бюджета, чтобы его было видно поверх */}
+            {/* Вставляем Snackbar ВНУТРИ модалки Бюджета, чтобы его было видно поверх */}
             <MySnackbar />
           </View>
         </View>
@@ -396,7 +401,6 @@ export default function Services() {
       </Modal>
 
       {/* ГЛАВНЫЙ SNACKBAR ДЛЯ ВСЕХ ЭКРАНОВ */}
-      {/* (Отображается поверх основного контента, когда модалки закрыты) */}
       <MySnackbar />
       
     </View>

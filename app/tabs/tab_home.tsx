@@ -23,12 +23,12 @@ export default function Home() {
   const getTransactionIcon = (title: string, category?: string) => {
     const text = (title + " " + (category || "")).toLowerCase();
     
-    if (text.includes('taxi') || text.includes('яндекс') || text.includes('uber')) return 'taxi'; // Как в Services
-    if (text.includes('bus') || text.includes('transport') || text.includes('proezd')) return 'bus'; // Как в Services
-    if (text.includes('itu') || text.includes('univer') || text.includes('tuition')) return 'school'; // Как в Services
-    if (text.includes('eco') || text.includes('tree')) return 'tree'; // Как в Services
-    if (text.includes('magnum') || text.includes('market') || text.includes('shop')) return 'cart';
-    if (text.includes('starbucks') || text.includes('coffee')) return 'coffee';
+    if (text.includes('taxi') || text.includes('яндекс') || text.includes('uber')) return 'taxi'; // [Image of Иконка такси]
+    if (text.includes('bus') || text.includes('transport') || text.includes('proezd')) return 'bus'; // 
+    if (text.includes('itu') || text.includes('univer') || text.includes('tuition')) return 'school'; // 
+    if (text.includes('eco') || text.includes('tree')) return 'tree'; // [Image of Иконка дерева]
+    if (text.includes('magnum') || text.includes('market') || text.includes('shop')) return 'cart'; // [Image of Иконка корзины]
+    if (text.includes('starbucks') || text.includes('coffee')) return 'coffee'; // [Image of Иконка кофе]
     
     return 'credit-card-outline'; // Дефолтная
   };
