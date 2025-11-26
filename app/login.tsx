@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
-import { TouchableOpacity } from 'react-native'; 
-import { TextInput, Button, Text, useTheme, ActivityIndicator } from 'react-native-paper'; 
+import { TextInput, Button, Text, useTheme } from 'react-native-paper'; 
 import { useAuthStore } from '../src/stores/authStore';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router'; 
@@ -21,6 +20,7 @@ export default function Login() {
   const { t } = useTranslation();
   const [loadingStep, setLoadingStep] = useState(false);
 
+  // --- ШАГ 1: Отправка пароля и запрос MFA ---
   const handleLoginStep1 = async () => {
     if (phone.length < 5 || password.length < 1) {
       Alert.alert(t('error'), "Введите данные");
@@ -31,25 +31,24 @@ export default function Login() {
     try {
         const cleanPhone = phone.replace(/\D/g, '');
 
-        // 1. Вызываем API для генерации кода (POST /mfa/generate)
+        // 1. Генерируем код на сервере
         await bankApi.generateMFA(); 
         
-        // По ТЗ, код будет напечатан в консоли Бэкенда
-        Alert.alert(t('settings_security'), "Код отправлен на сервер! (Ищите в консоли Python)");
+        // Подсказка для тестов
+        Alert.alert("SMS Код", "Код отправлен! (Ищите в консоли сервера)");
 
-        // 2. Переход на шаг 2
+        // Переходим ко второму шагу
         setStep(2);
-    } catch(e: any) { // <--- ИСПРАВЛЕНИЕ: :any для e
-        // e.response?.data?.detail - будет работать, потому что e теперь :any
-        const errorMessage = e.response?.data?.detail || "Ошибка при запросе кода. Сервер недоступен.";
-        
-        console.error("MFA Generate Error:", errorMessage);
+    } catch(e: any) {
+        const errorMessage = e.response?.data?.detail || "Ошибка при запросе кода.";
+        console.error("MFA Error:", errorMessage);
         Alert.alert(t('error'), errorMessage);
     } finally {
         setLoadingStep(false);
     }
   };
 
+  // --- ШАГ 2: Проверка кода и вход ---
   const handleVerifyCode = async () => {
     if (code.length < 4) {
         Alert.alert(t('error'), "Введите код");
@@ -58,20 +57,21 @@ export default function Login() {
 
     setLoadingStep(true);
     try {
-        // 1. Вызываем API для проверки кода (POST /mfa/verify)
+        // 1. Проверяем код на сервере
         await bankApi.verifyMFA(code); 
         
-        // 2. Если верификация успешна — пытаемся залогиниться (получаем токен)
+        // 2. Если код верный — получаем токен (логинимся)
         await login(phone.replace(/\D/g, ''), password); 
         
-    } catch (e: any) { // <--- ИСПРАВЛЕНИЕ: :any для e
-        // e.response?.data?.detail - будет работать, потому что e теперь :any
-        const errorMessage = e.response?.data?.detail || "Неверный код или ошибка сервера.";
+        // 3. УСПЕХ! Переходим на Главную страницу
+        // 'replace' удаляет экран логина из истории, чтобы нельзя было вернуться назад
+        router.replace('/(tabs)/home'); 
         
-        console.error("Verification Error:", errorMessage);
+    } catch (e: any) {
+        const errorMessage = e.response?.data?.detail || "Неверный код или ошибка сервера.";
+        console.error("Verify Error:", errorMessage);
         Alert.alert(t('error'), errorMessage);
     } finally {
-
         setLoadingStep(false);
     }
   };
@@ -84,15 +84,15 @@ export default function Login() {
         </Text>
         
         <Text variant="bodyLarge" style={styles.subtitle}>
-          {step === 1 ? 'Вход в экосистему' : 'Двухфакторная аутентификация'}
+          {step === 1 ? 'Вход в экосистему' : 'Подтверждение входа'}
         </Text>
 
         <View style={styles.form}>
           {step === 1 ? (
             <>
-              {/* ШАГ 1: Логин и Пароль */}
+              {/* ШАГ 1: Логин/Пароль */}
               <TextInput
-                label={t('phone_label')}
+                label={t('phone_label') || "Телефон"}
                 value={phone}
                 onChangeText={setPhone}
                 mode="outlined"
@@ -101,7 +101,7 @@ export default function Login() {
                 left={<TextInput.Icon icon="phone" />}
               />
               <TextInput
-                label={t('password_label')}
+                label={t('password_label') || "Пароль"}
                 value={password}
                 onChangeText={setPassword}
                 mode="outlined"
@@ -109,19 +109,23 @@ export default function Login() {
                 style={styles.input}
                 left={<TextInput.Icon icon="lock" />}
               />
-              <Button mode="contained" onPress={handleLoginStep1} loading={isLoading || loadingStep} style={styles.button} contentStyle={{ height: 56 }}>
-                {t('login_button')}
+              <Button 
+                mode="contained" 
+                onPress={handleLoginStep1} 
+                loading={isLoading || loadingStep} 
+                style={styles.button} 
+                contentStyle={{ height: 56 }}
+              >
+                {t('login_button') || "Войти"}
               </Button>
               
-              {/* КНОПКА РЕГИСТРАЦИИ */}
               <Button mode="text" onPress={() => router.push('/register')} style={{marginTop: 10}}>
                 Нет аккаунта? Регистрация
               </Button>
-
             </>
           ) : (
             <>
-              {/* ШАГ 2: Ввод Кода (MFA) */}
+              {/* ШАГ 2: Ввод Кода */}
               <Text style={{textAlign: 'center', marginBottom: 10, color: '#666'}}>
                 Мы отправили код на {phone}
               </Text>
@@ -134,9 +138,16 @@ export default function Login() {
                 style={styles.input}
                 left={<TextInput.Icon icon="message-processing" />}
                 placeholder="0000"
+                autoFocus
               />
-              <Button mode="contained" onPress={handleVerifyCode} loading={isLoading || loadingStep} style={styles.button} contentStyle={{ height: 56 }}>
-                Подтвердить
+              <Button 
+                mode="contained" 
+                onPress={handleVerifyCode} 
+                loading={isLoading || loadingStep} 
+                style={styles.button} 
+                contentStyle={{ height: 56 }}
+              >
+                Подтвердить и Войти
               </Button>
               <Button mode="text" onPress={() => setStep(1)} style={{marginTop: 10}}>
                 Назад
