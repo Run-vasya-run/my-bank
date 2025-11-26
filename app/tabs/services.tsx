@@ -60,21 +60,21 @@ export default function Services() {
 
   // === ОБНОВЛЕННЫЙ СПИСОК СЕРВИСОВ С ИКОНКАМИ ===
   const services = [
-    // [Image of Иконка сейфа]
-    { id: 9, title: 'Мой Бюджет', icon: 'safe', color: '#3f51b5', badge: 'NEW', desc: 'Сейф расходов', fullDesc: 'Временная стоянка для денег.' },
-    // 
+    // Используем 'safe' (или piggy-bank, если 'safe' не работает) для бюджета/сейфа
+    { id: 9, title: 'Мой Бюджет', icon: 'piggy-bank', color: '#3f51b5', badge: 'NEW', desc: 'Сейф расходов', fullDesc: 'Временная стоянка для денег.' },
+    // Для ITU Campus (Университет)
     { id: 5, title: 'ITU Campus', icon: 'school', color: '#6200ee', badge: null, desc: 'Университет', fullDesc: 'Оплата учебы и доступ в универ.' },
-    // 
+    // Для Digital Taraz (Транспорт)
     { id: 6, title: 'Digital Taraz', icon: 'bus', color: '#03dac6', badge: null, desc: 'Транспорт', fullDesc: 'Билеты и проезд.' },
-    // [Image of Иконка такси]
+    // Для Такси
     { id: 8, title: 'Такси', icon: 'taxi', color: '#ffc107', badge: null, desc: 'Заказ поездки', fullDesc: 'Быстрый заказ такси.' },
-    // 
+    // Для Ortak (Разделить счет)
     { id: 1, title: 'Ortak (Split)', icon: 'account-group', color: '#f4511e', badge: 'HOT', desc: 'Разделить счет', fullDesc: 'Скиньтесь с друзьями.' },
-    // [Image of Иконка дерева]
+    // Для Eco Life (Дерево)
     { id: 2, title: 'Eco Life', icon: 'tree', color: '#4caf50', badge: 'ESG', desc: 'Посади дерево', fullDesc: 'Внеси вклад в экологию.' },
-    // 
+    // Для Кредита
     { id: 7, title: 'Кредит', icon: 'cash-multiple', color: '#ff9800', badge: 'NEW', desc: 'Онлайн за 1 мин', fullDesc: 'Получи деньги на карту мгновенно.' },
-    // 
+    // Для Ghost Card (Безопасность)
     { id: 3, title: 'Ghost Card', icon: 'ghost', color: '#607d8b', badge: 'SAFE', desc: 'Безопасность', fullDesc: 'Виртуальная карта.' },
   ];
 
